@@ -1,6 +1,7 @@
 package com.ealth.codeleat.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
@@ -23,11 +24,18 @@ public class User {
     @NotBlank
     private String lastName;
 
-    @NotBlank
+    @Email
+    @Column(nullable = false, unique = true)
     private String email;
 
     @NotBlank
     private String username;
+
+    private String password;
+
+    private boolean isEmailVerified;
+
+    private String oAuthProvider;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserQuestion> attemptedQuestions = new HashSet<>();
