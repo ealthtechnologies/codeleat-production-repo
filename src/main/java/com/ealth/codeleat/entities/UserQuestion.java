@@ -10,7 +10,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @RequiredArgsConstructor
 public class UserQuestion {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

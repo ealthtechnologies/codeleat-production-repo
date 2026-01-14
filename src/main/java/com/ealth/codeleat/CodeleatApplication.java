@@ -17,6 +17,8 @@ public class CodeleatApplication {
 		System.setProperty("DB_PASSWORD", dotenv.get("DB_PASSWORD"));
 		System.setProperty("DB_DRIVER", dotenv.get("DB_DRIVER"));
 		System.setProperty("SERVER_PORT", dotenv.get("SERVER_PORT"));
+		System.setProperty("JWT_SECRET", dotenv.get("JWT_SECRET"));
+		System.setProperty("JWT_EXPIRATION", dotenv.get("JWT_EXPIRATION"));
 		SpringApplication.run(CodeleatApplication.class, args);
 	}
 
