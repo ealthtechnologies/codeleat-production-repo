@@ -16,7 +16,6 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class Question {
     @Id
-    @GeneratedValue(strategy=GenerationType.IDENTITY)
     private Integer id;
 
     @NotBlank

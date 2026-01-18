@@ -2,10 +2,12 @@ package com.ealth.codeleat.loader;
 
 import com.ealth.codeleat.entities.Question;
 import com.ealth.codeleat.entities.Tag;
+import com.ealth.codeleat.exceptions.InvalidOperationException;
 import com.ealth.codeleat.repositories.QuestionRepository;
 import com.ealth.codeleat.repositories.TagRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
 import java.util.HashSet;
@@ -22,6 +24,7 @@ public class QuestionDataLoader {
 
     public void saveQuestion(QuestionJson qj) throws JsonProcessingException {
         Question question = new Question();
+        question.setId(qj.getId());
         question.setTitle(qj.getTitle());
         question.setDifficulty(qj.getDifficulty());
         question.setAcceptance(qj.getAcceptance());
@@ -46,7 +49,11 @@ public class QuestionDataLoader {
         }
         question.setTags(tagSet);
 
-        questionRepository.save(question);
+        try {
+            questionRepository.save(question);
+        } catch (DataIntegrityViolationException exception) {
+            throw new InvalidOperationException(exception.getMessage());
+        }
     }
 }
 

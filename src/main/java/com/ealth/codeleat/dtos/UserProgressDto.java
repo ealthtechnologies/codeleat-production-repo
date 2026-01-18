@@ -16,9 +16,9 @@ public class UserProgressDto {
     Long totalSolved;
 
     public UserProgressDto(Long easySolved, Long mediumSolved, Long hardSolved) {
-        this.easySolved = easySolved;
-        this.mediumSolved = mediumSolved;
-        this.hardSolved = hardSolved;
-        this.totalSolved = easySolved + mediumSolved + hardSolved;
+        this.easySolved = easySolved != null ? easySolved : 0L;
+        this.mediumSolved = mediumSolved != null ? mediumSolved : 0L;
+        this.hardSolved = hardSolved != null ? hardSolved : 0L;
+        this.totalSolved = this.easySolved + this.mediumSolved + this.hardSolved;
     }
 }
