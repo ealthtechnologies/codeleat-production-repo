@@ -1,0 +1,94 @@
+{
+  "two-sum": {
+    "id": 1,
+    "title": "Two Sum",
+    "difficulty": "Medium",
+    "acceptance": "52.3%",
+    "submissions": "2.4M",
+    "tags": ["Array", "Hash Table"],
+    "description": "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.",
+    "intuition": [
+      { "title": "Understand the problem:", "text": "We need to find two numbers in an array that sum to a target value. The key constraint is that we must return their indices, not the values themselves." },
+      { "title": "Brute force approach:", "text": "The naive solution would check every pair of numbers, which gives us O(n²) time complexity. For each number, we'd check all remaining numbers." },
+      { "title": "Optimized approach:", "text": "Instead of checking pairs, we can use a hash map (dictionary) to store numbers we've seen along with their indices. As we iterate, for each number, we check if its complement (target - current number) exists in our map." },
+      { "title": "Key insight:", "text": "By storing numbers as we iterate, we can check for complements in O(1) time, reducing overall complexity from O(n²) to O(n). This is a classic space-time tradeoff." }
+    ],
+    "codeSnippets": {
+      "java": "public int[] twoSum(int[] nums, int target) {\n    Map<Integer, Integer> map = new HashMap<>();\n    for (int i = 0; i < nums.length; i++) {\n        int comp = target - nums[i];\n        if (map.containsKey(comp)) return new int[] { map.get(comp), i };\n        map.put(nums[i], i);\n    }\n    return new int[0];\n}",
+      "python": "def twoSum(nums, target):\n    hashmap = {}\n    for i, num in enumerate(nums):\n        comp = target - num\n        if comp in hashmap: return [hashmap[comp], i]\n        hashmap[num] = i"
+    },
+    "complexity": {
+      "time": { "value": "O(n)", "explanation": "One pass through the array." },
+      "space": { "value": "O(n)", "explanation": "Storing elements in a hash map." }
+    },
+    "visualSteps": [
+      { "desc": "Initialize: We start with an empty hashmap and the input array.", "image": "/images/two-sum-step1.jpeg" },
+      { "desc": "Step 1: Check nums[0] (value 2). Complement 9 - 2 = 7 is NOT in map. Store {2: 0}.", "image": "/images/two-sum-step2.jpeg" },
+      { "desc": "Step 2: Check nums[1] (value 7). Complement 9 - 7 = 2 IS in map! Return [0, 1].", "image": "/images/two-sum-step3.jpeg" }
+    ],
+    "mistakes": [
+      { "title": "Returning values instead of indices:", "text": "The problem specifically asks for indices, not the actual numbers. Make sure you're storing and returning indices in your hash map." },
+      { "title": "Using the same element twice:", "text": "Ensure the two indices are different. The problem states \"you may not use the same element twice.\"" },
+      { "title": "Not handling duplicates correctly:", "text": "When storing in hash map, later occurrences overwrite earlier ones. This is actually correct behavior - we want the most recent index for each value." },
+      { "title": "Assuming sorted array:", "text": "The array is not necessarily sorted, so a two-pointer approach won't work directly. You'd need to sort first, which changes the indices." },
+      { "title": "Checking complement before storing:", "text": "Make sure you check if the complement exists BEFORE storing the current number. Otherwise, you might match a number with itself." }
+    ],
+    "related": [
+      { "id": 15, "title": "3Sum", "difficulty": "Medium", "tags": ["Array", "Two Pointers", "Sorting"], "link": "/problem/3sum" },
+      { "id": 167, "title": "Two Sum II - Input Array Is Sorted", "difficulty": "Medium", "tags": ["Array", "Two Pointers", "Binary Search"], "link": "/problem/two-sum-ii" },
+      { "id": 653, "title": "Two Sum IV - Input is a BST", "difficulty": "Easy", "tags": ["Hash Table", "Tree", "Binary Search Tree"], "link": "/problem/two-sum-iv" },
+      { "id": 560, "title": "Subarray Sum Equals K", "difficulty": "Medium", "tags": ["Array", "Hash Table", "Prefix Sum"], "link": "/problem/subarray-sum" }
+    ],
+    "tips": [
+      { "title": "Clarify edge cases first:", "text": "Always ask about edge cases - empty arrays, no solution exists, multiple solutions, negative numbers, or very large numbers. This shows thorough thinking." },
+      { "title": "Start with brute force:", "text": "Mention the O(n²) approach first, then optimize. This demonstrates problem-solving progression and shows you can think through solutions systematically." },
+      { "title": "Explain the hash map approach clearly:", "text": "Walk through how storing complements helps reduce time complexity. Draw out an example if needed." },
+      { "title": "Discuss space-time tradeoff:", "text": "Mention when you might prefer O(1) space with O(n²) time vs. O(n) space with O(n) time. This shows understanding of tradeoffs." },
+      { "title": "Test with examples:", "text": "Walk through the algorithm with a concrete example (e.g., nums = [2,7,11,15], target = 9) to verify your logic." }
+    ]
+  },
+  "valid-palindrome": {
+    "id": 125,
+    "title": "Valid Palindrome",
+    "difficulty": "Easy",
+    "acceptance": "45.2%",
+    "submissions": "7.1M",
+    "tags": ["String", "Two Pointers"],
+    "description": "A phrase is a palindrome if, after converting all uppercase letters into lowercase letters and removing all non-alphanumeric characters, it reads the same forward and backward. Alphanumeric characters include letters and numbers. Given a string s, return true if it is a palindrome, or false otherwise.",
+    "intuition": [
+      { "title": "Clean the string:", "text": "The primary challenge is ignoring non-alphanumeric characters and case. We can either build a new 'cleaned' string or handle this on-the-fly." },
+      { "title": "Two-pointer technique:", "text": "A palindrome is symmetrical. By placing one pointer at the start and one at the end, we can move toward the middle and compare characters at each step." },
+      { "title": "Efficiency:", "text": "By using two pointers and skipping invalid characters, we avoid the extra space needed to create a new filtered string, achieving O(1) space complexity." }
+    ],
+    "codeSnippets": {
+      "java": "public boolean isPalindrome(String s) {\n    int left = 0, right = s.length() - 1;\n    while (left < right) {\n        while (left < right && !Character.isLetterOrDigit(s.charAt(left))) left++;\n        while (left < right && !Character.isLetterOrDigit(s.charAt(right))) right--;\n        if (Character.toLowerCase(s.charAt(left)) != Character.toLowerCase(s.charAt(right))) return false;\n        left++;\n        right--;\n    }\n    return true;\n}",
+      "python": "def isPalindrome(self, s: str) -> bool:\n    l, r = 0, len(s) - 1\n    while l < r:\n        while l < r and not s[l].isalnum(): l += 1\n        while l < r and not s[r].isalnum(): r -= 1\n        if s[l].lower() != s[r].lower(): return False\n        l += 1\n        r -= 1\n    return True"
+    },
+    "complexity": {
+      "time": { "value": "O(n)", "explanation": "We traverse the string at most once with two pointers." },
+      "space": { "value": "O(1)", "explanation": "No extra space is used regardless of input size (if pointers are used on-the-fly)." }
+    },
+    "visualSteps": [
+      { "desc": "Initial State: Pointers start at the very ends. Left at 'A', Right at '.'." },
+      { "desc": "Skip Non-Alphanumeric: Right pointer skips '.' and moves to 'a'. Left is already at 'A'." },
+      { "desc": "Comparison 1: Highlight 'A' and 'a'. Ignoring case, they match! Move both pointers." },
+      { "desc": "Skip Spaces/Commas: Left pointer skips ' ' and moves to 'm'. Right moves to 'm'." },
+      { "desc": "Comparison 2: Highlight 'm' and 'm'. They match! Continue scanning." },
+      { "desc": "Conclusion: Pointers continue until they meet. All valid characters matched symmetrically." }
+    ],
+    "mistakes": [
+      { "title": "RegEx Overuse:", "text": "Using heavy RegEx for cleaning can sometimes be slower than simple character checks in a loop." },
+      { "title": "Extra Space:", "text": "Creating a completely new reversed string is O(n) space; the two-pointer approach is more efficient at O(1)." },
+      { "title": "Non-Alphanumeric Logic:", "text": "Forgetting that 'alphanumeric' includes numbers (0-9), not just letters." }
+    ],
+    "related": [
+      { "id": 9, "title": "Palindrome Number", "difficulty": "Easy", "tags": ["Math"], "link": "/problem/palindrome-number" },
+      { "id": 680, "title": "Valid Palindrome II", "difficulty": "Easy", "tags": ["Two Pointers", "String"], "link": "/problem/valid-palindrome-ii" }
+    ],
+    "tips": [
+      { "title": "Built-in functions:", "text": "In an interview, mention you know Character.isLetterOrDigit (Java) or .isalnum() (Python) rather than writing a manual ASCII range check." },
+      { "title": "One-liner vs. Efficiency:", "text": "A one-liner like s == s[::-1] is elegant but uses extra space. Be ready to discuss this trade-off." },
+      { "title": "Empty Strings:", "text": "Confirm with the interviewer if an empty string or a string with only spaces is considered a palindrome (usually true)." }
+    ]
+  }
+}

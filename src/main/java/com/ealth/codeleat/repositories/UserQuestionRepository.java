@@ -1,6 +1,7 @@
 package com.ealth.codeleat.repositories;
 
 import com.ealth.codeleat.dtos.DailyActivityDto;
+import com.ealth.codeleat.dtos.UserProgressDto;
 import com.ealth.codeleat.entities.UserQuestion;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -24,4 +25,16 @@ public interface UserQuestionRepository extends JpaRepository<UserQuestion, Long
             @Param("start") LocalDateTime start,
             @Param("end") LocalDateTime end
     );
+
+    @Query("""
+    SELECT new com.ealth.codeleat.dtos.UserProgressDto(
+        SUM(CASE WHEN q.difficulty = 'Easy' THEN 1 ELSE 0 END),
+        SUM(CASE WHEN q.difficulty = 'Medium' THEN 1 ELSE 0 END),
+        SUM(CASE WHEN q.difficulty = 'Hard' THEN 1 ELSE 0 END)
+    )
+    FROM UserQuestion uq
+    JOIN uq.question q
+    WHERE uq.user.id = :userId
+    """)
+    UserProgressDto getUserDifficultySummary(@Param("userId") Integer userId);
 }

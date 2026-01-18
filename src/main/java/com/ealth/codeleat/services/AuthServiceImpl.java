@@ -51,7 +51,7 @@ public class AuthServiceImpl implements AuthService {
 
             return new JwtResponseDto(jwtToken, "Bearer", 604800000 / 1000);
         } catch(AuthenticationException exception) {
-            throw new InvalidOperationException("Some error occurred. Please try again!");
+            throw new InvalidOperationException("Invalid Credentials. Please try again!");
         }
     }
 

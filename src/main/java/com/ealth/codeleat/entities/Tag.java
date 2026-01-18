@@ -22,4 +22,9 @@ public class Tag {
 
     @ManyToMany(mappedBy = "tags")
     private Set<Question> questions = new HashSet<>();
+
+    public Tag(Integer id, String name) {
+        this.id = id;
+        this.name = name;
+    }
 }
