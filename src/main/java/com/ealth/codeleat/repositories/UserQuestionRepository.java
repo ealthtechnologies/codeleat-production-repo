@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface UserQuestionRepository extends JpaRepository<UserQuestion, Long> {
@@ -35,6 +36,9 @@ public interface UserQuestionRepository extends JpaRepository<UserQuestion, Long
     FROM UserQuestion uq
     JOIN uq.question q
     WHERE uq.user.id = :userId
+    AND uq.solved = true
     """)
     UserProgressDto getUserDifficultySummary(@Param("userId") Integer userId);
+
+    Optional<UserQuestion> findByQuestionIdAndUserId(Integer questionId, Integer userId);
 }

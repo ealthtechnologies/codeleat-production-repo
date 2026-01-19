@@ -14,6 +14,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -51,6 +52,22 @@ public class UserServiceImpl implements UserService {
         Question question = questionRepository.findById(questionId)
                 .orElseThrow(() -> new InvalidOperationException("No question with given id found"));
 
+        //if the user has already solved the question then just reverse the solved status as the user might have
+        //clicked on the tick symbol once again
+        Optional<UserQuestion> optionalUserQuestion = userQuestionRepository.findByQuestionIdAndUserId(questionId, user.getId());
+        if(optionalUserQuestion.isPresent()) {
+            boolean isSolved = optionalUserQuestion.get().isSolved();
+            if(optionalUserQuestion.get().isSolved()) {
+                optionalUserQuestion.get().setSolvedAt(null);
+            } else {
+                optionalUserQuestion.get().setSolvedAt(LocalDateTime.now());
+            }
+            optionalUserQuestion.get().setSolved(!isSolved);
+            userQuestionRepository.save(optionalUserQuestion.get());
+            return;
+        }
+
+
         //create a new UserQuestion entity to mark the question as solved for this user
         UserQuestion userQuestion = new UserQuestion();
         userQuestion.setUser(user);
@@ -60,6 +77,6 @@ public class UserServiceImpl implements UserService {
 
         user.getAttemptedQuestions().add(userQuestion);
 
-        userRepository.save(user);
+        userQuestionRepository.save(userQuestion);
     }
 }
