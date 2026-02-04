@@ -19,6 +19,8 @@ public class CodeleatApplication {
 		System.setProperty("SERVER_PORT", dotenv.get("SERVER_PORT"));
 		System.setProperty("JWT_SECRET", dotenv.get("JWT_SECRET"));
 		System.setProperty("JWT_EXPIRATION", dotenv.get("JWT_EXPIRATION"));
+		System.setProperty("GOOGLE_CLIENT_ID", dotenv.get("GOOGLE_CLIENT_ID"));
+		System.setProperty("GOOGLE_CLIENT_SECRET", dotenv.get("GOOGLE_CLIENT_SECRET"));
 		SpringApplication.run(CodeleatApplication.class, args);
 	}
 

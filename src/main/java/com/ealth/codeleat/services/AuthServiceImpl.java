@@ -44,7 +44,6 @@ public class AuthServiceImpl implements AuthService {
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
             Map<String, Object> claims = new HashMap<>();
-            claims.put("email", userDetails.getUsername());
             claims.put("role", userDetails.getAuthorities().iterator().next().getAuthority());
 
             String jwtToken = jwtService.generateToken(claims, userDetails.getUsername());
