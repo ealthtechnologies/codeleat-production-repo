@@ -4,6 +4,7 @@ import com.ealth.codeleat.dtos.DailyActivityDto;
 import com.ealth.codeleat.entities.User;
 import com.ealth.codeleat.repositories.UserQuestionRepository;
 import com.ealth.codeleat.repositories.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,6 +23,7 @@ public class ActivityServiceImpl implements ActivityService {
     private final UserQuestionRepository userQuestionRepository;
 
     @Override
+    @Transactional
     public List<DailyActivityDto> getUserActivity(LocalDate start, LocalDate end) {
 
         //fetch user from SecurityContext (as you already do)

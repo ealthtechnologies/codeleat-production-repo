@@ -1,6 +1,7 @@
 package com.ealth.codeleat.controllers;
 
 import com.ealth.codeleat.dtos.JwtResponseDto;
+import com.ealth.codeleat.dtos.OtpVerificationDto;
 import com.ealth.codeleat.dtos.UserLoginDto;
 import com.ealth.codeleat.dtos.UserSignUpDto;
 import com.ealth.codeleat.services.AuthService;
@@ -21,9 +22,8 @@ public class AuthController {
 
     //method for user Sign Up
     @PostMapping("/sign-up")
-    public ResponseEntity<HttpStatus> signUp(@Valid @RequestBody UserSignUpDto userSignUpDto) {
-        authService.signUp(userSignUpDto);
-        return new ResponseEntity<>(HttpStatus.CREATED);
+    public ResponseEntity<String> signUp(@Valid @RequestBody UserSignUpDto userSignUpDto) {
+        return new ResponseEntity<>(authService.signUp(userSignUpDto), HttpStatus.CREATED);
     }
 
     //method for user Login
@@ -33,16 +33,14 @@ public class AuthController {
     }
 
     //method for the frontend to fetch the jwt from the cookie
-    @GetMapping(value="/get-jwt")
+    @GetMapping(value="/get-token")
     public ResponseEntity<JwtResponseDto> fetchJwt(@CookieValue(name = "TEMP_JWT", required = false) String jwtToken,
                                                    HttpServletResponse response
     ) {
-        //If cookie missing → user not authenticated
+        //If cookie missing that means user not authenticated
         if (jwtToken == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-
-        System.out.println(jwtToken);
 
         //Delete the temporary cookie immediately
         Cookie deleteCookie = new Cookie("TEMP_JWT", null);
@@ -52,5 +50,12 @@ public class AuthController {
         response.addCookie(deleteCookie);
 
         return new ResponseEntity<>(new JwtResponseDto(jwtToken, "Bearer", 604800000 / 1000), HttpStatus.OK);
+    }
+
+    //Method to verify otp
+    @PostMapping(value="/verify-otp")
+    public ResponseEntity<HttpStatus> verifyOtp(@Valid @RequestBody OtpVerificationDto otpVerificationDto) {
+        authService.verifyOtp(otpVerificationDto);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }
