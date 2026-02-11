@@ -13,7 +13,7 @@ public class UserSignUpDto {
     private String lastName;
     @NotBlank
     private String email;
-    @NotBlank
+    //Username can be blank for OAuth users
     private String username;
     @NotBlank
     private String password;

@@ -43,6 +43,11 @@ public class CodeleatApplication {
 		System.setProperty("RESEND_API_KEY", dotenv.get("RESEND_API_KEY"));
 		System.setProperty("RESEND_FROM_EMAIL", dotenv.get("RESEND_FROM_EMAIL"));
 
+		//Cloudinary credentials
+		System.setProperty("CLOUDINARY_CLOUD_NAME", dotenv.get("CLOUDINARY_CLOUD_NAME"));
+		System.setProperty("CLOUDINARY_API_KEY", dotenv.get("CLOUDINARY_API_KEY"));
+		System.setProperty("CLOUDINARY_API_SECRET", dotenv.get("CLOUDINARY_API_SECRET"));
+
 		SpringApplication.run(CodeleatApplication.class, args);
 	}
 

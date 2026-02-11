@@ -1,11 +1,13 @@
 package com.ealth.codeleat.security;
 
 import com.ealth.codeleat.entities.User;
+import com.ealth.codeleat.exceptions.InvalidOperationException;
 import com.ealth.codeleat.repositories.UserRepository;
 import com.ealth.codeleat.services.UserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -50,15 +52,18 @@ public class OAuthSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
         //If the user is not present register him first and then generate jwt for him
         User user = null;
         if(optionalUser.isEmpty()) {
-            user = createOuthUser(oAuth2User, email);
+            try {
+                user = createOAuthUser(oAuth2User, email);
+            } catch(DataIntegrityViolationException ex) {
+                throw new InvalidOperationException("A user with this email id already exists!");
+            }
         } else {
             user = optionalUser.get();
         }
 
-        //if the user used normal sign up last time and is now trying to log in via
-        //o-auth, first verify email by sending otp and then log him in
+        //if the user used normal sign up last time and is now trying to log in via o-auth
         if(user.getOAuthProvider() == null) {
-            //generating otp and email verification logic to be written (later phase)
+            user.setEmailVerified(true);
             user.setOAuthProvider("GOOGLE");
             userRepository.save(user);
         }
@@ -66,27 +71,30 @@ public class OAuthSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
         //Generate JWT
         String jwt = jwtService.generateToken(new HashMap<>(), user.getEmail());
 
-        //Store JWT in a temporary HttpOnly cookie
-        //This cookie will exist only to let the frontend fetch the token
-        Cookie jwtCookie = new Cookie("TEMP_JWT", jwt);
-        jwtCookie.setHttpOnly(true);
-        jwtCookie.setSecure(true);       // true in prod
-        jwtCookie.setPath("/auth/get-token"); // only sent to /auth/get-token
-        jwtCookie.setMaxAge(60);         // 1 min validity
-        response.addCookie(jwtCookie);
+        //Store the jwt in a cookie which will be automatically sent to api every time
+        generateJwtCookie(jwt, response);
 
-        //Redirect to frontend callback
+        //Redirect to frontend dashboard directly
         getRedirectStrategy().sendRedirect(request, response, frontendUrl);
     }
 
     //helper method to create o-auth user
-    public User createOuthUser(OAuth2User oAuth2User, String email) {
+    public User createOAuthUser(OAuth2User oAuth2User, String email) {
         User newUser = new User();
         newUser.setEmail(email);
         newUser.setFirstName(oAuth2User.getAttribute("given_name"));
         newUser.setLastName(oAuth2User.getAttribute("family_name"));
         newUser.setOAuthProvider("GOOGLE");
         newUser.setUsername(null);
+        newUser.setEmailVerified(true);
         return userRepository.save(newUser);
+    }
+
+    //helper method to generate cookie for storing jwt
+    public void generateJwtCookie(String jwt, HttpServletResponse response) {
+        // Manually append SameSite attribute
+        response.setHeader("Set-Cookie",
+                String.format("ACCESS_TOKEN=%s; Max-Age=%d; Path=/; HttpOnly; Secure; SameSite=None",
+                        jwt, 15*60));
     }
 }

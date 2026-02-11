@@ -36,6 +36,10 @@ public class User {
 
     private String oAuthProvider;
 
+    private String bio;
+
+    private String profilePhotoUrl;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserQuestion> attemptedQuestions = new HashSet<>();
 }

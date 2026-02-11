@@ -28,8 +28,8 @@ public class AuthController {
 
     //method for user Login
     @PostMapping(value="/login")
-    public ResponseEntity<JwtResponseDto> login(@Valid @RequestBody UserLoginDto userLoginDto) {
-        return new ResponseEntity<>(authService.login(userLoginDto), HttpStatus.OK);
+    public ResponseEntity<JwtResponseDto> login(@Valid @RequestBody UserLoginDto userLoginDto, HttpServletResponse response) {
+        return new ResponseEntity<>(authService.login(userLoginDto, response), HttpStatus.OK);
     }
 
     //method for the frontend to fetch the jwt from the cookie

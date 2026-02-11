@@ -6,6 +6,8 @@ import com.ealth.codeleat.exceptions.DuplicateEmailException;
 import com.ealth.codeleat.exceptions.InvalidOperationException;
 import com.ealth.codeleat.repositories.UserRepository;
 import com.ealth.codeleat.security.JwtService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -27,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
-    //fields
+    //Fields
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final JwtService jwtService;
@@ -37,9 +39,9 @@ public class AuthServiceImpl implements AuthService {
     private final ResendEmailService resendEmailService;
     private final VerificationIdGenerator verificationIdGenerator;
 
-    //method for user Log in
+    //Method for user Log in
     @Transactional
-    public JwtResponseDto login(UserLoginDto loginRequestDto) {
+    public JwtResponseDto login(UserLoginDto loginRequestDto, HttpServletResponse response) {
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
@@ -67,13 +69,18 @@ public class AuthServiceImpl implements AuthService {
 
             String jwtToken = jwtService.generateToken(claims, userDetails.getUsername());
 
-            return new JwtResponseDto(jwtToken, "Bearer", 604800000 / 1000);
+            // Manually set SameSite if needed
+            response.setHeader("Set-Cookie",
+                    String.format("ACCESS_TOKEN=%s; Max-Age=%d; Path=/; HttpOnly; Secure; SameSite=None",
+                            jwtToken, 15*60));
+
+            return new JwtResponseDto("", "Token generated", 0);
         } catch(AuthenticationException exception) {
             throw new InvalidOperationException("Invalid Credentials. Please try again!");
         }
     }
 
-    //method for user Sign Up
+    //Method for user Sign Up
     @Transactional
     public String signUp(UserSignUpDto userSignUpDto) {
         final String duplicateEmailMessage = "A user with this email id already exists!";
@@ -93,7 +100,7 @@ public class AuthServiceImpl implements AuthService {
             throw new DuplicateEmailException(duplicateEmailMessage);
         }
 
-        //if no user exists already, create a new user and register in the database
+        //If no user exists already, create a new user and register in the database
         User newUser = new User();
         newUser.setFirstName(userSignUpDto.getFirstName());
         newUser.setLastName(userSignUpDto.getLastName());
@@ -165,4 +172,6 @@ public class AuthServiceImpl implements AuthService {
         userForVerification.setEmailVerified(true);
         userRepository.save(userForVerification);
     }
+
+    //he
 }

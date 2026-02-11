@@ -1,5 +1,6 @@
 package com.ealth.codeleat.services;
 
+import com.ealth.codeleat.dtos.ProfileDto;
 import com.ealth.codeleat.dtos.UserProgressDto;
 import com.ealth.codeleat.entities.Question;
 import com.ealth.codeleat.entities.User;
@@ -8,13 +9,16 @@ import com.ealth.codeleat.exceptions.InvalidOperationException;
 import com.ealth.codeleat.repositories.QuestionRepository;
 import com.ealth.codeleat.repositories.UserQuestionRepository;
 import com.ealth.codeleat.repositories.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +27,7 @@ public class UserServiceImpl implements UserService {
     private final UserQuestionRepository userQuestionRepository;
     private final UserRepository userRepository;
     private final QuestionRepository questionRepository;
+    private final CloudinaryService cloudinaryService;
 
     //helper method to get the authenticated user
     public User getCurrentUser() {
@@ -44,6 +49,7 @@ public class UserServiceImpl implements UserService {
         return userQuestionRepository.getUserDifficultySummary(user.getId());
     }
 
+    @Transactional
     @Override
     public void updateUserProgress(Integer questionId) {
         User user = getCurrentUser();
@@ -78,5 +84,48 @@ public class UserServiceImpl implements UserService {
         user.getAttemptedQuestions().add(userQuestion);
 
         userQuestionRepository.save(userQuestion);
+    }
+
+    //Method to get the profile of a user
+    public ProfileDto getUserProfile() {
+        //Get the currently authenticated user from
+        User user = getCurrentUser();
+
+        //Return the profile of the user by fetching it from database
+        return userRepository.getUserProfile(user.getId());
+    }
+
+    @Override
+    public void updateProfile(String firstName, String lastName, String username, String bio, MultipartFile photo) {
+        //Get the currently authenticated user from Application Context
+        User currentUser = getCurrentUser();
+
+        //Check if the user has uploaded a photo or not and upload it to Cloudinary
+        if(photo != null && !photo.isEmpty()) {
+            String imageUrl = cloudinaryService.uploadImage(photo);
+            currentUser.setProfilePhotoUrl(imageUrl);
+        }
+
+        //Check if the user has given his username or not and update accordingly
+        if(username != null && !username.isBlank()) {
+            currentUser.setUsername(username);
+        }
+
+        //Check if the user has given his first name or not and update accordingly
+        if(firstName != null && !firstName.isBlank()) {
+            currentUser.setFirstName(firstName);
+        }
+
+        //Check if the user has given his last name or not and update accordingly
+        if(lastName != null && !lastName.isBlank()) {
+            currentUser.setLastName(lastName);
+        }
+
+        //Check if the user has given his bio or not and update accordingly
+        if(bio != null && !bio.isBlank()) {
+            currentUser.setBio(bio);
+        }
+
+        userRepository.save(currentUser);
     }
 }

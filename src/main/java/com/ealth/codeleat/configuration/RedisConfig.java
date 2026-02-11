@@ -15,9 +15,7 @@ public class RedisConfig {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
 
-        // Use the modern RedisSerializer.json() - NOT deprecated
         StringRedisSerializer stringSerializer = new StringRedisSerializer();
-
         template.setKeySerializer(stringSerializer);
         template.setValueSerializer(RedisSerializer.json());
         template.setHashKeySerializer(stringSerializer);
