@@ -1,8 +1,13 @@
 package com.ealth.codeleat.services;
 
+import com.ealth.codeleat.dtos.OtpEmailEvent;
+import com.ealth.codeleat.dtos.PasswordResetEmailEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.resilience.annotation.Retryable;
+import org.springframework.context.event.EventListener;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Recover;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
@@ -28,8 +33,40 @@ public class OtpEmailEventListener {
         log.info("OTP email sent successfully to {}", event.getEmail());
     }
 
+    @Async("emailTaskExecutor")
+    @EventListener
+    public void handlePasswordResetEmailEvent(PasswordResetEmailEvent event) {
+        try {
+            if (event.isAddPassword()) {
+                log.info("Sending add password email to {} for {} OAuth",
+                        event.getEmail(), event.getOAuthProvider());
+                resendEmailService.sendAddPasswordEmail(
+                        event.getEmail(),
+                        event.getVerificationLink(),
+                        event.getOAuthProvider()
+                );
+            } else {
+                log.info("Sending reset password email to {}", event.getEmail());
+                resendEmailService.sendResetPasswordEmail(
+                        event.getEmail(),
+                        event.getVerificationLink()
+                );
+            }
+            log.info("Password reset email sent successfully to {}", event.getEmail());
+        } catch (Exception e) {
+            log.error("Failed to send password reset email to {}", event.getEmail(), e);
+            // Email failure is logged but doesn't break the forgot password flow
+        }
+    }
+
     @Recover
     public void recover(Exception e, OtpEmailEvent event) {
+        log.error("Failed to send OTP email to {} after all retries", event.getEmail(), e);
+        // Optionally: Store in DB for manual intervention
+    }
+
+    @Recover
+    public void recover(Exception e, PasswordResetEmailEvent event) {
         log.error("Failed to send OTP email to {} after all retries", event.getEmail(), e);
         // Optionally: Store in DB for manual intervention
     }

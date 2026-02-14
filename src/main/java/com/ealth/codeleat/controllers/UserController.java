@@ -5,7 +5,6 @@ import com.ealth.codeleat.dtos.UserProgressDto;
 import com.ealth.codeleat.entities.User;
 import com.ealth.codeleat.services.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.micrometer.observation.autoconfigure.ObservationProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;

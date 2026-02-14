@@ -12,6 +12,7 @@ import com.ealth.codeleat.security.JwtService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -42,6 +43,7 @@ public class AuthServiceImpl implements AuthService {
     private final ResendEmailService resendEmailService;
     private final VerificationIdGenerator verificationIdGenerator;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     //Method for user Log in
     @Transactional
@@ -58,6 +60,9 @@ public class AuthServiceImpl implements AuthService {
         }
 
         try {
+            user = userRepository.findByEmail(loginRequestDto.getEmail())
+                    .orElseThrow(() -> new InvalidOperationException("No user found with the given email!"));
+
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             loginRequestDto.getEmail(),
@@ -69,13 +74,23 @@ public class AuthServiceImpl implements AuthService {
 
             //check if the email of the user is verified or not. if not make him verify it first.
             //do not log him in
-            user = userRepository.findByEmail(userDetails.getUsername())
-                    .orElseThrow(() -> new InvalidOperationException("No user found with the given email!"));
-
             if(!user.isEmailVerified()) {
                 //generate a short-lived verification id that can be sent to frontend for verifying the otp later
                 String verificationId = verificationIdGenerator.generateVerificationId();
-                sendOtpEmail(user.getEmail(), verificationId, user.getId());
+                String otp = otpGenerator.generateNumericOtp();
+
+                stringRedisTemplate.opsForValue().set(
+                        "otp:" + verificationId, new OtpEntry(user.getId(), otp),
+                        5,
+                        TimeUnit.MINUTES
+                );
+
+                eventPublisher.publishEvent(new OtpEmailEvent(
+                        loginRequestDto.getEmail(),
+                        otp,
+                        "SIGNUP"
+                ));
+
                 return new AuthResponseDto(AccountStatus.EMAIL_NOT_VERIFIED, verificationId, "An account with this email exists but the email is not verified. We have sent an otp via email to verify your account.");
             }
 
@@ -138,7 +153,11 @@ public class AuthServiceImpl implements AuthService {
                         TimeUnit.MINUTES
                 );
 
-                resendEmailService.sendOtpEmail(existingUser.getEmail(), otp);
+                eventPublisher.publishEvent(new OtpEmailEvent(
+                        userSignUpDto.getEmail(),
+                        otp,
+                        "SIGNUP"
+                ));
 
                 return new AuthResponseDto(AccountStatus.EMAIL_NOT_VERIFIED, verificationId, "An account with this email exists but the email is not verified. We have sent an otp via email to verify your account.");
             } else {
@@ -171,24 +190,21 @@ public class AuthServiceImpl implements AuthService {
         //generate a short-lived verification id that can be sent to frontend for verifying the otp later
         String verificationId = verificationIdGenerator.generateVerificationId();
 
-        //verify the email first by sending otp and then save the user in database
-        sendOtpEmail(userSignUpDto.getEmail(), verificationId, newUser.getId());
-
-        return new AuthResponseDto(AccountStatus.EMAIL_NOT_VERIFIED, verificationId, "An otp has been sent to your email for verification.");
-    }
-
-    //helper method to send otp email
-    public void sendOtpEmail(String toEmail, String verificationId, Integer userId) {
-        final String redisOtpNamespace = "otp:";
-
-        //generate a 6 digit otp for the user
         String otp = otpGenerator.generateNumericOtp();
 
-        //store the otp in redis for future validation
-        stringRedisTemplate.opsForValue().set(redisOtpNamespace + verificationId, new OtpEntry(userId, otp) , 5, TimeUnit.MINUTES);
+        stringRedisTemplate.opsForValue().set(
+                "otp:" + verificationId, new OtpEntry(newUser.getId(), otp),
+                5,
+                TimeUnit.MINUTES
+        );
 
-        //send the email using RESEND email service
-        resendEmailService.sendOtpEmail(toEmail, otp);
+        eventPublisher.publishEvent(new OtpEmailEvent(
+                userSignUpDto.getEmail(),
+                otp,
+                "SIGNUP"
+        ));
+
+        return new AuthResponseDto(AccountStatus.EMAIL_NOT_VERIFIED, verificationId, "An otp has been sent to your email for verification.");
     }
 
     //method to verify otp
@@ -225,6 +241,7 @@ public class AuthServiceImpl implements AuthService {
 
     //Method to handle Forgot Password
     @Override
+    @Transactional
     public void forgotPassword(ForgotPasswordDto forgotPasswordDto) {
         final String email = forgotPasswordDto.getEmail();
         final String verificationLink = "https://codeleat.com/reset-password";
@@ -240,14 +257,16 @@ public class AuthServiceImpl implements AuthService {
         stringRedisTemplate.opsForValue().set("pwd_reset:" + verificationId, user.getEmail(), 5, TimeUnit.MINUTES);
 
         //Send email with verification link
-        if(user.getPassword() == null) {
-            resendEmailService.sendAddPasswordEmail(user.getEmail(), verificationLink + "?verificationId=" + verificationId, user.getOAuthProvider());
-        } else {
-            resendEmailService.sendResetPasswordEmail(user.getEmail(), verificationLink + "?verificationId=" + verificationId);
-        }
+        String fullVerificationLink = verificationLink + "?verificationId=" + verificationId;
+        eventPublisher.publishEvent(new PasswordResetEmailEvent(
+                user.getEmail(),
+                fullVerificationLink,
+                user.getPassword() == null ? user.getOAuthProvider() : null
+        ));
     }
 
     //Method to handle Reset Password
+    @Transactional
     public void resetPassword(ResetPasswordDto resetPasswordDto) {
         String verificationId = resetPasswordDto.getVerificationId();
         String newPassword = resetPasswordDto.getNewPassword();
@@ -272,6 +291,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     //Method to resend otp
+    @Transactional
     public AuthResponseDto resendOtp(ResendOtpDto resendOtpDto) {
         String oldVerificationId = resendOtpDto.getVerificationId();
         String email = resendOtpDto.getEmail();
@@ -295,8 +315,19 @@ public class AuthServiceImpl implements AuthService {
         //Generate a new verification id and a new otp for the user
         String verificationId = verificationIdGenerator.generateVerificationId();
 
-        //Send the otp email
-        sendOtpEmail(user.getEmail(), verificationId, user.getId());
+        String otp = otpGenerator.generateNumericOtp();
+
+        stringRedisTemplate.opsForValue().set(
+                "otp:" + verificationId, new OtpEntry(user.getId(), otp),
+                5,
+                TimeUnit.MINUTES
+        );
+
+        eventPublisher.publishEvent(new OtpEmailEvent(
+                resendOtpDto.getEmail(),
+                otp,
+                "RESEND_OTP"
+        ));
 
         return new AuthResponseDto(AccountStatus.EMAIL_NOT_VERIFIED, verificationId, "An otp has been sent to your email for verification.");
     }
