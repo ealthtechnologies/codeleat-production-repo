@@ -1,13 +1,14 @@
 package com.ealth.codeleat.services;
 
-import com.ealth.codeleat.dtos.JwtResponseDto;
-import com.ealth.codeleat.dtos.OtpVerificationDto;
-import com.ealth.codeleat.dtos.UserLoginDto;
-import com.ealth.codeleat.dtos.UserSignUpDto;
+import com.ealth.codeleat.dtos.*;
 import jakarta.servlet.http.HttpServletResponse;
 
 public interface AuthService {
-    public String signUp(UserSignUpDto userSignUpDto);
-    public JwtResponseDto login(UserLoginDto userLoginDto, HttpServletResponse response);
+    public AuthResponseDto signUp(UserSignUpDto userSignUpDto);
+    public AuthResponseDto login(UserLoginDto userLoginDto, HttpServletResponse response);
     public void verifyOtp(OtpVerificationDto otpVerificationDto);
+    public void forgotPassword(ForgotPasswordDto forgotPasswordDto);
+    public void resetPassword(ResetPasswordDto resetPasswordDto);
+    public AuthResponseDto resendOtp(ResendOtpDto resendOtpDto);
+    public void setCookies(String verificationId, HttpServletResponse response);
 }

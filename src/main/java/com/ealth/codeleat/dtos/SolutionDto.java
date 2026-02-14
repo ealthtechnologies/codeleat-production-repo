@@ -2,11 +2,13 @@ package com.ealth.codeleat.dtos;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 
 import java.util.Set;
 
 @Data
 @AllArgsConstructor
+@Getter
 public class SolutionDto {
     private Integer id;
     private String title;

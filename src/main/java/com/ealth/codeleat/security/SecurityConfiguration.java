@@ -3,6 +3,7 @@ package com.ealth.codeleat.security;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -10,6 +11,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -40,12 +42,16 @@ public class SecurityConfiguration {
                 //Public endpoints
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/auth/**",          //normal login, register, token refresh
-                                "/oauth2/**",        //OAuth login endpoints
-                                "/error",
-                                "/data/load"//optional error endpoint
+                                "/auth/**",          //Normal login, register, token refresh
+                                "/oauth2/**",        //OAuth login endpoint
+                                "/data/load" //Endpoint for loading question data
                         ).permitAll()
                         .anyRequest().authenticated() // everything else requires authentication
+                )
+
+                //Configuration if what to do when a secured endpoint is accessed without any auth
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(new RestAuthenticationEntryPoint())
                 )
 
                 //Add O-Auth success handler
@@ -80,11 +86,10 @@ public class SecurityConfiguration {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:8080")); // frontend origin
+        configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:8080", "https://autoloading-postmedieval-darcie.ngrok-free.dev", "https://dorie-lunulate-breezily.ngrok-free.dev")); // frontend origin
         configuration.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true); // needed for JWT/cookies
-
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

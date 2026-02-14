@@ -16,7 +16,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -127,5 +129,31 @@ public class UserServiceImpl implements UserService {
         }
 
         userRepository.save(currentUser);
+    }
+
+    //Method to get user streak
+    public Integer getUserStreak() {
+        //Get the currently authenticated user
+        User user = getCurrentUser();
+        Integer userId = user.getId();
+
+        //Get the questions record of the user from the database
+        List<LocalDate> dates = userQuestionRepository.getUserStreak(userId).stream()
+                .map(LocalDateTime::toLocalDate)
+                .distinct()
+                .toList();
+
+        Integer streak = 0;
+        LocalDate today = LocalDate.now();
+
+        for (LocalDate date : dates) {
+            if (date.equals(today.minusDays(streak))) {
+                streak++;
+            } else {
+                break;
+            }
+        }
+
+        return streak;
     }
 }

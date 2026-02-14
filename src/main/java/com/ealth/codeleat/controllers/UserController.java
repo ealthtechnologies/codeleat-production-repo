@@ -5,13 +5,13 @@ import com.ealth.codeleat.dtos.UserProgressDto;
 import com.ealth.codeleat.entities.User;
 import com.ealth.codeleat.services.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.micrometer.observation.autoconfigure.ObservationProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
 
 @RestController
 @RequestMapping(value="/user")
@@ -46,10 +46,15 @@ public class UserController {
             @RequestParam(value = "username", required = false) String username,
             @RequestParam(value = "bio", required = false) String bio,
             @RequestParam(value = "firstName", required = false) String firstName,
-            @RequestParam(value = "lastName", required = false) String lastName,
-            @RequestParam(value = "email", required = false) String email
+            @RequestParam(value = "lastName", required = false) String lastName
     ) {
         userService.updateProfile(firstName, lastName, username, bio, photo);
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    //Endpoint to get user streak
+    @GetMapping(value="/get-streak")
+    public ResponseEntity<Integer> forgotPassword() {
+        return new ResponseEntity<>(userService.getUserStreak(), HttpStatus.OK);
     }
 }

@@ -9,4 +9,5 @@ public interface UserService {
     public void updateUserProgress(Integer questionId);
     public ProfileDto getUserProfile();
     public void updateProfile(String firstName, String lastName, String username, String bio, MultipartFile photo);
+    public Integer getUserStreak();
 }

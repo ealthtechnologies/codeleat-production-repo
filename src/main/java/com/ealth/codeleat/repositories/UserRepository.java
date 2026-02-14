@@ -17,7 +17,7 @@ public interface UserRepository extends JpaRepository<User, Integer> {
      SELECT new com.ealth.codeleat.dtos.ProfileDto(
      u.firstName, u.lastName, u.username, u.profilePhotoUrl, u.bio)
      FROM User u
-     WHERE u.id = :userId"""
-    )
+     WHERE u.id = :userId
+     """)
     ProfileDto getUserProfile(@Param("userId") Integer user);
 }

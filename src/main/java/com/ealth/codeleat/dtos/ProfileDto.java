@@ -1,12 +1,10 @@
 package com.ealth.codeleat.dtos;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-@AllArgsConstructor
 public class ProfileDto {
     ProfileDto(String firstName, String lastName, String username, String profilePhotoUrl, String bio) {
         this.firstName = firstName;
@@ -20,5 +18,4 @@ public class ProfileDto {
     String username;
     String profilePhotoUrl;
     String bio;
-    String email;
 }

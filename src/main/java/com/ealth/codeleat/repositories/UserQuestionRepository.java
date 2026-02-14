@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -41,4 +42,14 @@ public interface UserQuestionRepository extends JpaRepository<UserQuestion, Long
     UserProgressDto getUserDifficultySummary(@Param("userId") Integer userId);
 
     Optional<UserQuestion> findByQuestionIdAndUserId(Integer questionId, Integer userId);
+
+    @Query("""
+        SELECT uq.solvedAt
+        FROM UserQuestion uq
+        WHERE uq.user.id = :userId
+        AND uq.solved = true
+        ORDER BY uq.solvedAt DESC
+        """)
+    List<LocalDateTime> getUserStreak(Integer userId);
+
 }

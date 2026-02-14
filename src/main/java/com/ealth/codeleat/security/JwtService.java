@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -34,10 +35,11 @@ public class JwtService {
                 .setClaims(extraClaims)
                 .setSubject(username)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) // 24h expiry
+                .setExpiration(new Date(System.currentTimeMillis() + 15 * 60 * 1000)) // 15m expiry
                 .signWith(key)
                 .compact();
     }
+
     // extract username
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -65,5 +67,26 @@ public class JwtService {
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
+    }
+
+    //Generate Refresh Token
+    public String generateRefreshToken(String username) {
+
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("type", "refresh");
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(username)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + 7 * 24 * 60 * 60 * 1000)) // 7 days
+                .signWith(key)
+                .compact();
+    }
+
+    //Method to check if a token is actually a Refresh Token or not
+    public boolean isRefreshToken(String token) {
+        String tokenType = extractClaim(token, claims -> claims.get("type", String.class));
+        return "refresh".equals(tokenType);
     }
 }
