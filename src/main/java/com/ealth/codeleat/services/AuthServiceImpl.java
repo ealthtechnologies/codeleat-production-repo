@@ -12,6 +12,7 @@ import com.ealth.codeleat.security.JwtService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -24,12 +25,14 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
@@ -40,7 +43,6 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final RedisTemplate<String, Object> stringRedisTemplate;
     private final OtpGenerator otpGenerator;
-    private final ResendEmailService resendEmailService;
     private final VerificationIdGenerator verificationIdGenerator;
     private final RefreshTokenRepository refreshTokenRepository;
     private final ApplicationEventPublisher eventPublisher;
@@ -52,8 +54,12 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(loginRequestDto.getEmail())
                 .orElse(null);
 
+        if(user != null) {
+            log.info("Login request for user id {} received", user.getId());
+        }
+
         if (user != null && user.getPassword() == null) {
-            // User registered via OAuth
+            //User registered via OAuth
             throw new InvalidOperationException(
                     "This account was created using Google Sign-In. Please use 'Sign in with Google' to continue."
             );
@@ -91,6 +97,8 @@ public class AuthServiceImpl implements AuthService {
                         "SIGNUP"
                 ));
 
+                log.info("The account with email {} exists but has not been verified. A mail has been sent for otp verification. Cannot process login request", user.getEmail());
+
                 return new AuthResponseDto(AccountStatus.EMAIL_NOT_VERIFIED, verificationId, "An account with this email exists but the email is not verified. We have sent an otp via email to verify your account.");
             }
 
@@ -120,6 +128,9 @@ public class AuthServiceImpl implements AuthService {
                     String.format("REFRESH_TOKEN=%s; Max-Age=%d; Path=/auth/refresh; HttpOnly; Secure; SameSite=None",
                             refreshToken, 7*24*60*60));
 
+            log.info("Cookies set for login request of {}", user.getEmail());
+            log.info("Login successful for {}", user.getEmail());
+
             return new AuthResponseDto(AccountStatus.SUCCESS, "Login Successful");
         } catch(AuthenticationException exception) {
             throw new InvalidOperationException("Invalid Credentials. Please try again!");
@@ -131,10 +142,12 @@ public class AuthServiceImpl implements AuthService {
     public AuthResponseDto signUp(UserSignUpDto userSignUpDto) {
         final String duplicateEmailMessage = "A user with this email id already exists!";
 
-        //check if a user with this email already exists
+        log.info("Sign up request with email id {} received", userSignUpDto.getEmail());
+
+        //Check if a user with this email already exists
         Optional<User> optionalUser = userRepository.findByEmail(userSignUpDto.getEmail());
         if (optionalUser.isPresent()) {
-            //check if it's an OAuth user
+            //Check if it's an OAuth user
             User existingUser = optionalUser.get();
             if (existingUser.getOAuthProvider() != null) {
                 throw new DuplicateEmailException(
@@ -159,6 +172,7 @@ public class AuthServiceImpl implements AuthService {
                         "SIGNUP"
                 ));
 
+                log.info("The account with email {} already exists but is not verified. A mail has been sent to the email id. Cannot process sign up request", existingUser.getEmail());
                 return new AuthResponseDto(AccountStatus.EMAIL_NOT_VERIFIED, verificationId, "An account with this email exists but the email is not verified. We have sent an otp via email to verify your account.");
             } else {
                 // Account exists and is verified
@@ -183,7 +197,8 @@ public class AuthServiceImpl implements AuthService {
         //we can rely on the fact that concurrent registrations will be seldom
         try {
             userRepository.save(newUser);
-        } catch(DataIntegrityViolationException exception) {
+            log.info("Successfully created account for {}", newUser.getEmail());
+        } catch (DataIntegrityViolationException exception) {
             throw new DuplicateEmailException(duplicateEmailMessage);
         }
 
@@ -204,17 +219,22 @@ public class AuthServiceImpl implements AuthService {
                 "SIGNUP"
         ));
 
+        log.info("Mail sent for email verification of new account with email {}", newUser.getEmail());
         return new AuthResponseDto(AccountStatus.EMAIL_NOT_VERIFIED, verificationId, "An otp has been sent to your email for verification.");
     }
 
     //method to verify otp
     @Transactional
     public void verifyOtp(OtpVerificationDto otpVerificationDto) {
+        log.info("Request for otp verification with verification id {} received", otpVerificationDto.getVerificationId());
+
         String verificationId = otpVerificationDto.getVerificationId();
         String enteredOtp = otpVerificationDto.getEnteredOtp();
 
         //Get the otp from redis using the verification id from the front end
         OtpEntry otpEntry = (OtpEntry) stringRedisTemplate.opsForValue().get("otp:" + verificationId);
+
+        log.info("Otp entry for verification id {} fetched from redis", otpVerificationDto.getVerificationId());
 
         //If the returned String is null, that means the time for verification expired
         if(otpEntry == null) {
@@ -237,18 +257,28 @@ public class AuthServiceImpl implements AuthService {
 
         userForVerification.setEmailVerified(true);
         userRepository.save(userForVerification);
+
+        log.info("Otp verification for email {} successful. Account verified", userForVerification.getEmail());
     }
 
     //Method to handle Forgot Password
     @Override
     @Transactional
     public void forgotPassword(ForgotPasswordDto forgotPasswordDto) {
+        log.info("Request for forgot password for email {} received", forgotPasswordDto.getEmail());
+
         final String email = forgotPasswordDto.getEmail();
-        final String verificationLink = "https://codeleat.com/reset-password";
+        final String verificationLink = "https://autoloading-postmedieval-darcie.ngrok-free.dev/reset/password";
 
         //Check if a user with the given email id exists in the database or not
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new InvalidOperationException("No user with the given email id exists!"));
+
+        if(user.getOAuthProvider() == null) {
+            log.info("Forgot password request is for normal account. Resetting password for email {}", user.getEmail());
+        } else {
+            log.info("Adding password for o-auth account {}", user.getEmail());
+        }
 
         //Generate a verificationId
         String verificationId = verificationIdGenerator.generateVerificationId();
@@ -258,11 +288,14 @@ public class AuthServiceImpl implements AuthService {
 
         //Send email with verification link
         String fullVerificationLink = verificationLink + "?verificationId=" + verificationId;
+
         eventPublisher.publishEvent(new PasswordResetEmailEvent(
                 user.getEmail(),
                 fullVerificationLink,
                 user.getPassword() == null ? user.getOAuthProvider() : null
         ));
+
+        log.info("Request for forgot password for email {} successful. A mail with reset link has been sent.", user.getEmail());
     }
 
     //Method to handle Reset Password

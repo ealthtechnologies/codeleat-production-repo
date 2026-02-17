@@ -32,8 +32,8 @@ public class ResendEmailServiceImpl implements ResendEmailService{
             SendEmailResponse response = resend.emails().send(emailRequest);
             System.out.println("Email sent! ID: " + response.getId());
         } catch (ResendException e) {
-            System.err.println("Failed to send email: " + e.getMessage());
-            throw new RuntimeException("Email sending failed", e);
+            System.out.println("Failed to send email: " + e.getMessage());
+            throw new RuntimeException("Email sending failed. Its not you its us. Please try again after a few minutes.", e);
         }
     }
 
@@ -74,7 +74,7 @@ public class ResendEmailServiceImpl implements ResendEmailService{
             System.out.println("Email sent! ID: " + response.getId());
         } catch (ResendException e) {
             System.err.println("Failed to send email: " + e.getMessage());
-            throw new RuntimeException("Email sending failed", e);
+            throw new RuntimeException("Email sending failed. Its not you its us. Please try again after a few minutes.", e);
         }
     }
 
@@ -91,7 +91,7 @@ public class ResendEmailServiceImpl implements ResendEmailService{
             System.out.println("Email sent! ID: " + response.getId());
         } catch (ResendException e) {
             System.err.println("Failed to send email: " + e.getMessage());
-            throw new RuntimeException("Email sending failed", e);
+            throw new RuntimeException("Email sending failed. Its not you its us. Please try again after a few minutes.", e);
         }
     }
 

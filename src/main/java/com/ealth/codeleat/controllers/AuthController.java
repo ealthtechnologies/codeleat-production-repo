@@ -4,6 +4,7 @@ import com.ealth.codeleat.dtos.*;
 import com.ealth.codeleat.entities.RefreshToken;
 import com.ealth.codeleat.entities.User;
 import com.ealth.codeleat.repositories.RefreshTokenRepository;
+import com.ealth.codeleat.repositories.UserRepository;
 import com.ealth.codeleat.security.JwtService;
 import com.ealth.codeleat.services.AuthService;
 import jakarta.servlet.http.Cookie;
@@ -11,29 +12,34 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(value="/auth")
 public class AuthController {
-    //fields
+    //Fields
     private final AuthService authService;
     private final JwtService jwtService;
     private final RefreshTokenRepository refreshTokenRepository;
 
-    //method for user Sign Up
-    @PostMapping("/sign-up")
+    //Method for user Sign Up
+    @PostMapping(value="/sign-up")
     public ResponseEntity<AuthResponseDto> signUp(@Valid @RequestBody UserSignUpDto userSignUpDto) {
-        return new ResponseEntity<>(authService.signUp(userSignUpDto), HttpStatus.CREATED);
+        AuthResponseDto authResponseDto = authService.signUp(userSignUpDto);
+        log.info("Response returned at: " + LocalDateTime.now());
+        return new ResponseEntity<>(authResponseDto, HttpStatus.CREATED);
     }
 
-    //method for user Login
+    //Method for user Login
     @PostMapping(value="/login")
     public ResponseEntity<AuthResponseDto> login(@Valid @RequestBody UserLoginDto userLoginDto, HttpServletResponse response) {
         return new ResponseEntity<>(authService.login(userLoginDto, response), HttpStatus.OK);
@@ -125,6 +131,7 @@ public class AuthController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    //Endpoint to receive request for Resending the OTP
     @PostMapping(value="/resend-otp")
     public ResponseEntity<AuthResponseDto> resendOtp(@RequestBody ResendOtpDto resendOtpDto) {
         return new ResponseEntity<>(authService.resendOtp(resendOtpDto), HttpStatus.OK);

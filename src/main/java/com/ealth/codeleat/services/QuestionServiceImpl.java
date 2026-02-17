@@ -8,6 +8,7 @@ import com.ealth.codeleat.entities.Tag;
 import com.ealth.codeleat.entities.User;
 import com.ealth.codeleat.entities.UserQuestion;
 import com.ealth.codeleat.exceptions.InvalidOperationException;
+import com.ealth.codeleat.exceptions.TooManyRequestsException;
 import com.ealth.codeleat.repositories.QuestionRepository;
 import com.ealth.codeleat.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -103,7 +104,7 @@ public class QuestionServiceImpl implements QuestionService {
         boolean allowed = rateLimitService.tryConsume(email);
         if (!allowed) {
             log.warn("Rate limit exceeded for user: {}", email);
-            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "Too many requests.");
+            throw new TooManyRequestsException("Too many requests");
         }
 
         int userId = user.getId();

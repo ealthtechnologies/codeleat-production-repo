@@ -2,6 +2,7 @@ package com.ealth.codeleat.exception_handler;
 
 import com.ealth.codeleat.exceptions.DuplicateEmailException;
 import com.ealth.codeleat.exceptions.InvalidOperationException;
+import com.ealth.codeleat.exceptions.TooManyRequestsException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -66,13 +67,27 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
 
         ErrorResponse response = new ErrorResponse(
-                ex.getMessage(), // optional: hide in production
+                ex.getMessage(),
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
                 Instant.now()
         );
 
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(TooManyRequestsException.class)
+    public ResponseEntity<ErrorResponse> handleTooManyRequests(
+            TooManyRequestsException ex) {
+
+        ErrorResponse response = new ErrorResponse(
+                ex.getMessage(),
+                HttpStatus.TOO_MANY_REQUESTS.value(),
+                HttpStatus.TOO_MANY_REQUESTS.getReasonPhrase(),
+                Instant.now()
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.TOO_MANY_REQUESTS);
     }
 }
 

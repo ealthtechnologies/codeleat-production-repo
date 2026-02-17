@@ -66,7 +66,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
 
             } catch (Exception e) {
-                // Token invalid or user not found, ignore and continue
+                //Token invalid or user not found, ignore and continue
             }
         }
 

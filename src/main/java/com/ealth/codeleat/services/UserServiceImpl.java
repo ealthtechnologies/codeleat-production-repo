@@ -51,8 +51,8 @@ public class UserServiceImpl implements UserService {
         return userQuestionRepository.getUserDifficultySummary(user.getId());
     }
 
-    @Transactional
     @Override
+    @Transactional
     public void updateUserProgress(Integer questionId) {
         User user = getCurrentUser();
 
