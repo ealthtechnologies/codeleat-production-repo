@@ -36,16 +36,12 @@ public class ActivityServiceImpl implements ActivityService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        log.info("Request for fetching user activity calendar received for user id {}", user.getId());
-
         LocalDateTime startDt = start.atStartOfDay();
         LocalDateTime endDt = end.atTime(LocalTime.MAX);
 
         List<Object[]> rows =
                 userQuestionRepository.findDailyActivity(
                         user.getId(), startDt, endDt);
-
-        log.info("User activity for user id {} fetched from database", user.getId());
 
         return rows.stream()
                 .map(row -> new DailyActivityDto(

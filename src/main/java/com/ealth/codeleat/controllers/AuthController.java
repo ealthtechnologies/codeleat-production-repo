@@ -35,7 +35,6 @@ public class AuthController {
     @PostMapping(value="/sign-up")
     public ResponseEntity<AuthResponseDto> signUp(@Valid @RequestBody UserSignUpDto userSignUpDto) {
         AuthResponseDto authResponseDto = authService.signUp(userSignUpDto);
-        log.info("Response returned at: " + LocalDateTime.now());
         return new ResponseEntity<>(authResponseDto, HttpStatus.CREATED);
     }
 

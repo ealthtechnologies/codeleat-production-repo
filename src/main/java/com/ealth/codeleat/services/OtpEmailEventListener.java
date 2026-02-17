@@ -58,7 +58,6 @@ public class OtpEmailEventListener {
                     event.getVerificationLink()
             );
         }
-        log.info("Password reset email sent successfully to {}", event.getEmail());
     }
 
     @Recover
