@@ -9,6 +9,8 @@ import com.ealth.codeleat.exceptions.InvalidOperationException;
 import com.ealth.codeleat.repositories.RefreshTokenRepository;
 import com.ealth.codeleat.repositories.UserRepository;
 import com.ealth.codeleat.security.JwtService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -359,5 +361,33 @@ public class AuthServiceImpl implements AuthService {
 
         //Delete the tokens from redis
         stringRedisTemplate.delete("o-auth:" + verificationId);
+    }
+
+    //Method for logout
+    @Override
+    public void logout(HttpServletRequest request, HttpServletResponse response) {
+        String refreshToken = null;
+
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("REFRESH_TOKEN".equals(cookie.getName())) {
+                    refreshToken = cookie.getValue();
+                    break;
+                }
+            }
+        }
+
+        //Delete refresh token from DB
+        if (refreshToken != null) {
+            refreshTokenRepository.deleteByToken(refreshToken);
+        }
+
+        //Clear ACCESS_TOKEN cookie
+        response.setHeader("Set-Cookie",
+                "ACCESS_TOKEN=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=None");
+
+        //Clear REFRESH_TOKEN cookie
+        response.addHeader("Set-Cookie",
+                "REFRESH_TOKEN=; Max-Age=0; Path=/auth/refresh; HttpOnly; Secure; SameSite=None");
     }
 }

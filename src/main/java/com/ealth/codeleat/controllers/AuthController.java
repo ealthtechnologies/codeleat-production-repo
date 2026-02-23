@@ -142,4 +142,10 @@ public class AuthController {
         authService.setCookies(verificationId, response);
         return new ResponseEntity<>(HttpStatus.OK);
     }
+
+    @PostMapping(value="/logout")
+    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
+        authService.logout(request, response);
+        return ResponseEntity.ok("Logged out successfully!");
+    }
 }

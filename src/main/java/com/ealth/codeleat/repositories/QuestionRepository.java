@@ -49,13 +49,11 @@ public interface QuestionRepository extends JpaRepository<Question, Integer> {
         WHERE (:query IS NULL OR LOWER(q.title) LIKE LOWER(CONCAT('%', :query, '%')))
         AND (:difficulty IS NULL OR LOWER(q.difficulty) = LOWER(:difficulty))
         AND (:tags IS NULL OR t.name IN :tags)
-        AND (ua.user.id = :userId OR ua IS NULL)
         """)
     Page<Question> findAllWithFilters(
             @Param("query") String query,
             @Param("difficulty") String difficulty,
             @Param("tags") List<String> tags,
-            @Param("userId") Integer userId,
             Pageable pageable
     );
 
@@ -70,12 +68,12 @@ public interface QuestionRepository extends JpaRepository<Question, Integer> {
     List<Question> findByIdInWithTags(@Param("ids") List<Integer> ids);
 
     @Query("""
-        SELECT DISTINCT q FROM Question q
-        LEFT JOIN FETCH q.userAttempts ua
-        WHERE q.id IN :ids AND (ua.user.id = :userId OR ua IS NULL)
-        """)
+    SELECT DISTINCT q FROM Question q
+    LEFT JOIN FETCH q.userAttempts ua
+    LEFT JOIN FETCH ua.user
+    WHERE q.id IN :ids
+    """)
     List<Question> findByIdInWithUserAttempts(
-            @Param("ids") List<Integer> ids,
-            @Param("userId") Integer userId
+            @Param("ids") List<Integer> ids
     );
 }

@@ -1,5 +1,6 @@
 package com.ealth.codeleat.services;
 
+import com.ealth.codeleat.dtos.CloudinaryUploadResult;
 import com.ealth.codeleat.dtos.ProfileDto;
 import com.ealth.codeleat.dtos.UserProgressDto;
 import com.ealth.codeleat.entities.Question;
@@ -97,15 +98,29 @@ public class UserServiceImpl implements UserService {
         return userRepository.getUserProfile(user.getId());
     }
 
+    //Method to update user profile
     @Override
-    public void updateProfile(String firstName, String lastName, String username, String bio, MultipartFile photo) {
+    public void updateProfile(String firstName, String lastName, String username, String bio, MultipartFile photo, Boolean removePhoto) {
         //Get the currently authenticated user from Application Context
         User currentUser = getCurrentUser();
 
+        //Check if the user wants to remove his profile photo
+        if(removePhoto) {
+            cloudinaryService.deleteImage(currentUser.getProfilePhotoPublicId());
+            currentUser.setProfilePhotoUrl(null);
+            currentUser.setProfilePhotoPublicId(null);
+        }
+
         //Check if the user has uploaded a photo or not and upload it to Cloudinary
         if(photo != null && !photo.isEmpty()) {
-            String imageUrl = cloudinaryService.uploadImage(photo);
-            currentUser.setProfilePhotoUrl(imageUrl);
+            if(currentUser.getProfilePhotoPublicId() != null) {
+                cloudinaryService.deleteImage(currentUser.getProfilePhotoPublicId());
+            }
+            CloudinaryUploadResult cloudinaryUploadResult = cloudinaryService.uploadImage(photo);
+            String secureUrl = cloudinaryUploadResult.getUrl();
+            String publicId = cloudinaryUploadResult.getPublicId();
+            currentUser.setProfilePhotoUrl(secureUrl);
+            currentUser.setProfilePhotoPublicId(publicId);
         }
 
         //Check if the user has given his username or not and update accordingly

@@ -45,20 +45,6 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.CONFLICT);
     }
 
-    @ExceptionHandler(TooManyRequestsException.class)
-    public ResponseEntity<ErrorResponse> handleTooManyRequests(
-            TooManyRequestsException ex) {
-
-        ErrorResponse response = new ErrorResponse(
-                ex.getMessage(),
-                HttpStatus.TOO_MANY_REQUESTS.value(),
-                HttpStatus.TOO_MANY_REQUESTS.getReasonPhrase(),
-                Instant.now()
-        );
-
-        return new ResponseEntity<>(response, HttpStatus.TOO_MANY_REQUESTS);
-    }
-
     //WARN - expected, business rule violation you threw intentionally
     @ExceptionHandler(InvalidOperationException.class)
     public ResponseEntity<ErrorResponse> handleInvalidOperation(

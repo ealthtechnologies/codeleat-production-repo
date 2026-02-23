@@ -8,6 +8,6 @@ public interface UserService {
     public UserProgressDto getUserProgress();
     public void updateUserProgress(Integer questionId);
     public ProfileDto getUserProfile();
-    public void updateProfile(String firstName, String lastName, String username, String bio, MultipartFile photo);
+    public void updateProfile(String firstName, String lastName, String username, String bio, MultipartFile photo, Boolean removePhoto);
     public Integer getUserStreak();
 }

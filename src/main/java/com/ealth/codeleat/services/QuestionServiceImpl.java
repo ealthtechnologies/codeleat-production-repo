@@ -112,7 +112,7 @@ public class QuestionServiceImpl implements QuestionService {
 
         // Query 1: Get paginated questions matching filters (no eager loading)
         Page<Question> questionPage = questionRepository.findAllWithFilters(
-                query, difficulty, tags, userId, pageable
+                query, difficulty, tags, pageable
         );
 
         log.info("Searching questions - query: '{}', difficulty: '{}', tags: {}, page: {}, size: {}, found: {}",
@@ -134,7 +134,7 @@ public class QuestionServiceImpl implements QuestionService {
         log.debug("Batch fetched tags for {} questions", questionIds.size());
 
         // Query 3: Batch fetch user attempts - Hibernate merges into session cache
-        questionRepository.findByIdInWithUserAttempts(questionIds, userId);
+        questionRepository.findByIdInWithUserAttempts(questionIds);
         log.debug("Batch fetched user attempts for {} questions", questionIds.size());
 
         // Map to DTO - everything is now loaded in the Question entities

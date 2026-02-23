@@ -39,6 +39,8 @@ public class User {
 
     private String profilePhotoUrl;
 
+    private String profilePhotoPublicId;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserQuestion> attemptedQuestions = new HashSet<>();
 }

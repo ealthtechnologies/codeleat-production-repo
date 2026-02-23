@@ -45,9 +45,11 @@ public class UserController {
             @RequestParam(value = "username", required = false) String username,
             @RequestParam(value = "bio", required = false) String bio,
             @RequestParam(value = "firstName", required = false) String firstName,
-            @RequestParam(value = "lastName", required = false) String lastName
+            @RequestParam(value = "lastName", required = false) String lastName,
+            @RequestParam(required = false) String removePhoto
     ) {
-        userService.updateProfile(firstName, lastName, username, bio, photo);
+        boolean remove = "true".equalsIgnoreCase(removePhoto);
+        userService.updateProfile(firstName, lastName, username, bio, photo, remove);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
