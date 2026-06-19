@@ -86,7 +86,7 @@ public class SecurityConfiguration {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:8080", "https://autoloading-postmedieval-darcie.ngrok-free.dev", "https://dorie-lunulate-breezily.ngrok-free.dev")); // frontend origin
+        configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:8080", "https://autoloading-postmedieval-darcie.ngrok-free.dev", "https://dorie-lunulate-breezily.ngrok-free.dev", "https://agent-6a149edf67b486dbedfb303--jade-fudge-e4c90e.netlify.app", "https://titles-steady-copied-uni.trycloudflare.com")); // frontend origin
         configuration.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true); // needed for JWT/cookies
